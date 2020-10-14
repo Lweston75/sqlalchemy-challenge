@@ -40,6 +40,7 @@ year_before = dt.datetime.strftime(year_before, '%Y-%m-%d')
 
 
 
+
 @app.route("/")
 def home():
     return (f"Climate API<br/>"
