@@ -24,6 +24,7 @@ session = Session(engine)
 app = Flask(__name__)
 
 
+
 latest_date = (session.query(Measurement.date)
                 .order_by(Measurement.date.desc())
                 .first())
