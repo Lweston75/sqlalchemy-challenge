@@ -8,7 +8,7 @@ from sqlalchemy.orm import Session
 from sqlalchemy import create_engine, func
 from flask import Flask, jsonify
 
-engine = create_engine("sqlite:///Resources/hawaii.sqlite", connect_args={'check_same_thread': False})
+engine = create_engine("sqlite:///Resources/hawaii.sqlite")
 
 
 Base = automap_base()
@@ -24,18 +24,18 @@ session = Session(engine)
 app = Flask(__name__)
 
 
-latestDate = (session.query(Measurement.date)
+latest_date = (session.query(Measurement.date)
                 .order_by(Measurement.date.desc())
                 .first())
-latestDate = list(np.ravel(latestDate))[0]
+latest_date = list(np.ravel(latestDate))[0]
 
-latestDate = dt.datetime.strptime(latestDate, '%Y-%m-%d')
-latestYear = int(dt.datetime.strftime(latestDate, '%Y'))
-latestMonth = int(dt.datetime.strftime(latestDate, '%m'))
-latestDay = int(dt.datetime.strftime(latestDate, '%d'))
+latest_date = dt.datetime.strptime(latest_date, '%Y-%m-%d')
+latest_year = int(dt.datetime.strftime(latest_date, '%Y'))
+latest_month = int(dt.datetime.strftime(latest_date, '%m'))
+latest_day = int(dt.datetime.strftime(latest_date, '%d'))
 
-yearBefore = dt.date(latestYear, latestMonth, latestDay) - dt.timedelta(days=365)
-yearBefore = dt.datetime.strftime(yearBefore, '%Y-%m-%d')
+year_before = dt.date(latest_year, latest_month, latest_day) - dt.timedelta(days=365)
+year_before = dt.datetime.strftime(year_before, '%Y-%m-%d')
 
 
 
@@ -61,38 +61,38 @@ def stations():
 def precipitation():
     
     results = (session.query(Measurement.date, Measurement.prcp, Measurement.station)
-                      .filter(Measurement.date > yearBefore)
+                      .filter(Measurement.date > year_before)
                       .order_by(Measurement.date)
                       .all())
     
     precipData = []
     for result in results:
-        precipDict = {result.date: result.prcp, "Station": result.station}
-        precipData.append(precipDict)
+        precip_dict = {result.date: result.prcp, "Station": result.station}
+        precip_data.append(precip_dict)
 
-    return jsonify(precipData)
+    return jsonify(precip_data)
 
 @app.route("/api/v1.0/temperature")
 def temperature():
 
     results = (session.query(Measurement.date, Measurement.tobs, Measurement.station)
-                      .filter(Measurement.date > yearBefore)
+                      .filter(Measurement.date > year_before)
                       .order_by(Measurement.date)
                       .all())
 
-    tempData = []
+    temp_data = []
     for result in results:
-        tempDict = {result.date: result.tobs, "Station": result.station}
-        tempData.append(tempDict)
+        temp_dict = {result.date: result.tobs, "Station": result.station}
+        temp_data.append(temp_dict)
 
     return jsonify(tempData)
 
-@app.route('/api/v1.0/datesearch/<startDate>')
-def start(startDate):
+@app.route('/api/v1.0/datesearch/<start_date>')
+def start(start_date):
     sel = [Measurement.date, func.min(Measurement.tobs), func.avg(Measurement.tobs), func.max(Measurement.tobs)]
 
     results =  (session.query(*sel)
-                       .filter(func.strftime("%Y-%m-%d", Measurement.date) >= startDate)
+                       .filter(func.strftime("%Y-%m-%d", Measurement.date) >= start_date)
                        .group_by(Measurement.date)
                        .all())
 
@@ -100,19 +100,19 @@ def start(startDate):
     for result in results:
         date_dict = {}
         date_dict["Date"] = result[0]
-        date_dict["Low Temp"] = result[1]
-        date_dict["Avg Temp"] = result[2]
-        date_dict["High Temp"] = result[3]
+        date_dict["TMIN"] = result[1]
+        date_dict["TAvg"] = result[2]
+        date_dict["TMAX"] = result[3]
         dates.append(date_dict)
     return jsonify(dates)
 
-@app.route('/api/v1.0/datesearch/<startDate>/<endDate>')
-def startEnd(startDate, endDate):
+@app.route('/api/v1.0/datesearch/<start_date>/<end_date>')
+def startEnd(start_date, end_date):
     sel = [Measurement.date, func.min(Measurement.tobs), func.avg(Measurement.tobs), func.max(Measurement.tobs)]
 
     results =  (session.query(*sel)
-                       .filter(func.strftime("%Y-%m-%d", Measurement.date) >= startDate)
-                       .filter(func.strftime("%Y-%m-%d", Measurement.date) <= endDate)
+                       .filter(func.strftime("%Y-%m-%d", Measurement.date) >= start_date)
+                       .filter(func.strftime("%Y-%m-%d", Measurement.date) <= end_date)
                        .group_by(Measurement.date)
                        .all())
 
@@ -120,9 +120,9 @@ def startEnd(startDate, endDate):
     for result in results:
         date_dict = {}
         date_dict["Date"] = result[0]
-        date_dict["Low Temp"] = result[1]
-        date_dict["Avg Temp"] = result[2]
-        date_dict["High Temp"] = result[3]
+        date_dict["TMIN"] = result[1]
+        date_dict["TAVG"] = result[2]
+        date_dict["TMAX"] = result[3]
         dates.append(date_dict)
     return jsonify(dates)
 
